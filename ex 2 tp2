@@ -1,0 +1,115 @@
+import re
+import string
+
+try:
+    with open('text.txt', "r+", encoding="utf-8") as file:
+        t = file.read()
+        occurence = {}
+        phrases_liste = []
+
+        def analyse_lexicale(**kwargs):
+            liste = t.split()
+            print(f"Nombre total de mots: {len(liste)}")
+            
+            c = 0
+            for x in liste:
+                mot_nettoye = x.strip(string.punctuation).lower()
+                if mot_nettoye:
+                    occurence[mot_nettoye] = occurence.get(mot_nettoye, 0) + 1
+                    
+            print(f"Fréquence des mots: {occurence}")
+
+            mot_recherche_lower = kwargs['mot'].lower()
+            for x in liste:
+                if x.lower().strip(string.punctuation) == mot_recherche_lower:
+                    c += 1
+            print(f"Le nombre de '{kwargs['mot']}' est {c}")
+
+            if len(liste) > 0:
+                nombre_lettre = sum([len(x) for x in liste]) / len(liste)
+                print(f"Longueur moyenne des mots: {int(nombre_lettre)}")
+                
+                max1 = [i for i, y in occurence.items() if y == max(occurence.values())]
+                min1 = [i for i, y in occurence.items() if y == min(occurence.values())]
+                print(f"Mot(s) le(s) plus utilisé(s): {max1}")
+                print(f"Mot(s) le(s) moins utilisé(s): {min1}")
+            else:
+                print("Le fichier est vide, analyses lexicales impossibles.")
+
+            palindromes = [x for x in liste if x.lower() == x.lower()[::-1] and len(x) > 1]
+            print(f"Palindromes trouvés: {list(set(palindromes))}")
+
+
+        def analyse_grammaticale():
+            global phrases_liste
+            
+            phrases_brutes = re.split(r'[.!?]', t)
+            phrases_liste = [p.strip() for p in phrases_brutes if p.strip()]
+            
+            if not phrases_liste:
+                print("Nombre de phrases: 0")
+                print("Longueur moyenne des phrases: 0")
+            else:
+                print(f"Nombre de phrases: {len(phrases_liste)}")
+                longueurs_mots = [len(p.split()) for p in phrases_liste]
+                longueur_moyenne = sum(longueurs_mots) / len(phrases_liste)
+                print(f"Longueur moyenne des phrases: {longueur_moyenne:.2f} mots")
+
+            ponctuations = {}
+            for char in t:
+                if char in string.punctuation:
+                    ponctuations[char] = ponctuations.get(char, 0) + 1
+            print(f"Types de ponctuation utilisés: {ponctuations}")
+
+            print("Statistiques par type de mot (Nom, Verbe...): Non implémenté (nécessite des outils avancés de NLP).")
+
+
+        def generer_rapports():
+            if not occurence:
+                print("Rapports basés sur les mots non disponibles (fichier vide ou analyse lexicale non exécutée).")
+                return
+
+            mots_tries = sorted(occurence.items(), key=lambda item: item[1], reverse=True)
+            print(f"Top 10 des mots les plus fréquents: {mots_tries[:10]}")
+
+            if phrases_liste:
+                longueurs_mots = [len(p.split()) for p in phrases_liste]
+                max_longueur = max(longueurs_mots)
+                phrases_longues = [phrases_liste[i] for i, longueur in enumerate(longueurs_mots) if longueur == max_longueur]
+                print(f"Phrase(s) la/les plus longue(s) ({max_longueur} mots):")
+                for p in phrases_longues:
+                    print(f"  - \"{p}\"")
+            else:
+                print("Rapport 'Phrases les plus longues' non disponible.")
+
+            liste_mots_brute = t.split()
+            if liste_mots_brute:
+                mots_uniques = set(x.strip(string.punctuation).lower() for x in liste_mots_brute if x.strip(string.punctuation))
+                nombre_mots_total = len(liste_mots_brute)
+                diversite = (len(mots_uniques) / nombre_mots_total) * 100
+                print(f"Diversité du vocabulaire: {len(mots_uniques)} mots uniques sur {nombre_mots_total} mots ({diversite:.2f}%)")
+            else:
+                print("Diversité du vocabulaire: 0.00% (fichier vide)")
+
+            if len(liste_mots_brute) > 1:
+                bigrams = {}
+                for i in range(len(liste_mots_brute) - 1):
+                    paire = (liste_mots_brute[i], liste_mots_brute[i+1])
+                    bigrams[paire] = bigrams.get(paire, 0) + 1
+                
+                bigrams_tries = sorted(bigrams.items(), key=lambda item: item[1], reverse=True)
+                print(f"Patterns répétitifs (Top 5 séquences de 2 mots): {bigrams_tries[:5]}")
+            else:
+                print("Patterns répétitifs: Pas assez de mots pour analyser les séquences.")
+
+        
+        mots_a_chercher = input("Entrer le mot à chercher: ")
+        
+        analyse_lexicale(mot=mots_a_chercher)
+        analyse_grammaticale()
+        generer_rapports()
+
+except FileNotFoundError:
+    print(f"ERREUR: Le fichier 'text.txt' n'a pas été trouvé.")
+except Exception as e:
+    print(f"Une erreur est survenue: {e}")
